@@ -301,3 +301,15 @@ class InputMatrices:
         return Rubiks(faces)
 
 
+def makeRandomRubiks(solved_cube, num_moves):
+    import random
+    cube = solved_cube.clone()
+    moves = IDAStarNode.MOVES
+    for _ in range(num_moves):
+        move = random.choice(moves)
+        cube.applyMove(move)
+    return cube
+
+
+exportedclasses = [Rubiks, IDAStarNode, InputMatrices]
+exportfunctions = [makeRandomRubiks]
