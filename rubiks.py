@@ -281,3 +281,23 @@ class IDAStarNode:
         return nodes
 
 
+class InputMatrices:
+    def __init__(self, input_string):
+        self.colors = input_string.split(',')
+        if len(self.colors) != 54:
+            raise ValueError("Input string must contain exactly 54 colors separated by commas")
+
+    def makeRubiks(self):
+        # Create 6 faces, each 3x3
+        faces = []
+        idx = 0
+        for _ in range(6):
+            face = []
+            for _ in range(3):
+                row = self.colors[idx:idx+3]
+                face.append(row)
+                idx += 3
+            faces.append(face)
+        return Rubiks(faces)
+
+
