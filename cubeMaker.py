@@ -15,7 +15,7 @@ def sendRubiksToFile(rubiks, filename):
             for face in cubes.faces:
                 face_matrix = cubes.faces[face]
                 for row in face_matrix:
-                    f.write(','.join(row) + '\n')
+                    f.write(','.join(map(str, row)) + '\n')
             f.write('---------\n')  # Separate different cubes with a blank line        
 """function to send the generated cubes to a file, with each cube separated by a blank line with dashes 
 to make it easier to separate cubes when converting back to cube objects."""

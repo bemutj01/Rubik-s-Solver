@@ -1,6 +1,7 @@
 import rubiks as r
 import numpy as np
 import time
+import os
 import argparse
 parser = argparse.ArgumentParser(description='Rubik\'s Cube Solver')
 parser.add_argument('file', type=str, help='Path to the input file containing cube configurations')
@@ -123,7 +124,51 @@ The minimum f value that exceeds the depth limit is tracked.
 This version of the search can significantly reduce the search time for states that have already been encountered during the search process, 
 as it can quickly retrieve solutions for those states without having to search through the entire tree again."""
 
-
+def IDAStarWithForks(root):
+    # This is an untested prototype for a version of IDA* that uses process forking 
+    # to explore different branches of the search tree in parallel.
+    iteration = 0
+    while True:
+        iteration += 1
+        # print(f"Iteration {iteration}: depth_limit = {depth_limit}")
+        result = IDAStarSearchWithForks(root, iteration)
+        if isinstance(result, IDAStarNode):
+            return result
+        if result == float('inf'):
+            return None  # No solution found
+"""IDA* search implementation with process forking.
+This version of IDA* uses process forking to explore 
+different branches of the search tree in parallel."""
+def IDAStarSearchWithForks(node, depth_limit):
+    # this is an untested prototype for a version of the recursive search function 
+    # that uses process forking to explore different branches of the search tree in parallel.
+    if node.isGoal():
+        return node
+    if node.f > depth_limit:
+        return node.f
+    min_threshold = float('inf')
+    for next_node in node.nextNodes():
+        pid = os.fork()
+        if pid == 0:  # Child process
+            result = IDAStarSearchWithForks(next_node, depth_limit)
+            if isinstance(result, IDAStarNode):
+                print(f"Found solution in child process {os.getpid()}!")
+                with open(f'solution_{os.getpid()}.txt', 'w') as f:
+                    f.write(f"Solution found in child process {os.getpid()}!\n")
+                    f.write(f"Moves: {result.path}\n")
+            os._exit(0)  # Exit child process after search
+    if pid > 0:  # Parent process
+        os.wait()  # Wait for child processes to finish
+        if os.path.exists(f'solution_{pid}.txt'):
+            with open(f'solution_{pid}.txt', 'r') as f:
+                return f.read()  # Return the solution found by the child process
+            os.remove(f'solution_{pid}.txt')  # Clean up solution file
+    return min_threshold
+"""Recursive search function for IDA* with process forking.
+This version of the search function uses process forking to explore different branches of the search tree in
+parallel. Each child process explores a different branch of the search tree, and if a solution is found, 
+it writes the solution to a file. The parent process waits for the child processes to finish 
+and checks for any solution files created by the child processes."""
 
 def extractCubesFromFile(filename):
     with open(filename, 'r') as f:
