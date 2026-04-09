@@ -251,3 +251,33 @@ def manhattanDistanceFromSolved(self):
     while still giving a reasonable estimate of distance from the solved state. Used for solving logic."""
 
 
+class IDAStarNode:
+    MOVES = ["L", "L'", "R", "R'", "U", "U'", "D", "D'", "F", "F'", "B", "B'"]
+
+    def __init__(self, rubiks, path=None, parent=None):
+        self.rubiks = rubiks
+        self.path = path if path is not None else []
+        self.parent = parent
+        self.g = len(self.path)
+        self.h = self.rubiks.manhattanDistanceFromSolved()
+        self.f = self.g + self.h
+
+    def isGoal(self):
+        return self.rubiks.isSolved()
+
+    def getPath(self):
+        return self.path
+
+    def getRubiks(self):
+        return self.rubiks
+
+    def nextNodes(self):
+        nodes = []
+        for move in self.MOVES:
+            new_rubiks = self.rubiks.clone()
+            new_rubiks.applyMove(move)
+            new_path = self.path + [move]
+            nodes.append(IDAStarNode(new_rubiks, new_path, self))
+        return nodes
+
+
