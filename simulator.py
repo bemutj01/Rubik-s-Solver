@@ -11,6 +11,41 @@ InputMatrices = r.InputMatrices
 IDAStarNode = r.IDAStarNode
 outFile = args.outFile
 makeRandomRubiks = r.makeRandomRubiks
+def IDAStar(root):
+    iteration = 0
+    while True:
+        iteration += 1
+        # print(f"Iteration {iteration}: depth_limit = {depth_limit}")
+        result = IDAStarSearch(root, iteration)
+        if isinstance(result, IDAStarNode):
+            # print(f"Found solution in iteration {iteration}!")
+            return result
+        if result == float('inf'):
+            return None  # No solution found
+"""IDA* search implementation. 
+Iteratively deepens the search by increasing the depth limit until a solution is found or all possibilities are exhausted. 
+The search function checks if the current node is the goal, and if not, it generates the next nodes and continues the search recursively. 
+The f value of each node is used to determine if it should be explored further based on the current depth limit."""
+        
+def IDAStarSearch(node, depth_limit):
+    if node.isGoal():
+        return node
+    if node.f > depth_limit:
+        return node.f
+    min_threshold = float('inf')
+    for next_node in node.nextNodes():
+        result = IDAStarSearch(next_node, depth_limit)
+        if isinstance(result, IDAStarNode):
+            return result
+        min_threshold = min(min_threshold, result)
+    return min_threshold
+"""Recursive search function for IDA*. It checks if the current node is the goal, and if not, 
+it generates the next nodes and continues the search recursively.
+The f value of each node is used to determine if it should be explored further based on the current depth limit. 
+If a solution is found, it returns the node; if the f value exceeds the depth limit, 
+it returns the f value, which is compared to other f values. 
+The minimum f value that exceeds the depth limit is tracked."""
+
 
 def extractCubesFromFile(filename):
     with open(filename, 'r') as f:
@@ -45,3 +80,19 @@ This allows for the cube configurations read from the file to be processed and s
 
 test_cubes = extractCubesFromFile(args.file)
 rubiks_list = cubesToRubiks(test_cubes)
+# successMemorizingIDAStar(IDAStarNode(rubiks_list[2]))
+# print("Memorized solutions:")
+# for state, path in memorized_solutions:
+#    print(f"State: {state}, Path: {path}")
+with open(outFile, 'w') as f:
+    f.write("Results for IDA*:\n")
+    for i, rubiks in enumerate(rubiks_list):
+        f.write(f"Solving cube {i+1}...")
+        start_time = time.time()
+        solution_node = IDAStar(IDAStarNode(rubiks))
+        end_time = time.time()
+        if solution_node:
+            f.write(f"Solution found for cube {i+1} in {end_time - start_time:.2f} seconds!")
+            f.write(f"Moves: {solution_node.path}\n")
+        else:
+            f.write(f"No solution found for cube {i+1}.\n")
