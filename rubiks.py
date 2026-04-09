@@ -5,14 +5,36 @@ class Rubiks:
     FACE_ORDER = ["Up", "Down", "Left", "Right", "Front", "Back"]
 
     def __init__(self, matrixList):
-        # Convert matrix list to NumPy arrays
+        def normalize_face(face):
+            face_arr = np.asarray(face, dtype=object)
+            if face_arr.ndim == 1 and face_arr.size == 3 and all(
+                isinstance(row, (list, tuple, np.ndarray)) and len(row) == 3 for row in face_arr
+            ):
+                face_arr = np.vstack([np.asarray(row, dtype=object).flatten() for row in face_arr])
+            elif face_arr.ndim == 1 and face_arr.size == 9:
+                face_arr = face_arr.reshape((3, 3))
+            if face_arr.ndim != 2 or face_arr.shape != (3, 3):
+                raise ValueError("Each face must be a 3x3 matrix.")
+            normalized = np.array(
+                [[str(item.item()).strip() if isinstance(item, np.ndarray) and item.size == 1 else str(item).strip() for item in row] for row in face_arr],
+                dtype=str,
+            )
+            return normalized
+
+        if len(matrixList) == 18 and all(
+            isinstance(row, (list, tuple, np.ndarray)) and len(row) == 3 for row in matrixList
+        ):
+            matrixList = [matrixList[i:i+3] for i in range(0, 18, 3)]
+        elif len(matrixList) != 6:
+            raise ValueError("Rubiks constructor requires either 6 faces or 18 rows.")
+
         self.faces = {
-            "Up": np.array(matrixList[0]),
-            "Down": np.array(matrixList[1]),
-            "Left": np.array(matrixList[2]),
-            "Right": np.array(matrixList[3]),
-            "Front": np.array(matrixList[4]),
-            "Back": np.array(matrixList[5]),
+            "Up": normalize_face(matrixList[0]),
+            "Down": normalize_face(matrixList[1]),
+            "Left": normalize_face(matrixList[2]),
+            "Right": normalize_face(matrixList[3]),
+            "Front": normalize_face(matrixList[4]),
+            "Back": normalize_face(matrixList[5]),
         }
         """initialize Rubiks Cube object from a list of 6 matrices, each representing a face of the cube.
         The matrices are stored in a dictionary with face names as keys for easy access. 
@@ -208,32 +230,31 @@ class Rubiks:
     def applyMove(self, move):
         if move == "L":
             self.left(False)
-        elif move == "L'":
+        elif move == "LP":
             self.left(True)
         elif move == "R":
             self.right(False)
-        elif move == "R'":
+        elif move == "RP":
             self.right(True)
         elif move == "U":
             self.up(False)
-        elif move == "U'":
+        elif move == "UP":
             self.up(True)
         elif move == "D":
             self.down(False)
-        elif move == "D'":
+        elif move == "DP":
             self.down(True)
         elif move == "F":
             self.front(False)
-        elif move == "F'":
+        elif move == "FP":
             self.front(True)
         elif move == "B":
             self.back(False)
-        elif move == "B'":
+        elif move == "BP":
             self.back(True)
         """Move controller function. Takes a move in string format and applies the corresponding move to the cube.
-        Used for any code that wants to apply moves to the cube, such as scrambling or solving logic."""
-    
-def manhattanDistanceFromSolved(self):
+        Used for any code that wants to apply moves to the cube, such as scrambling or solving logic."""  
+    def manhattanDistanceFromSolved(self):
         # Simple heuristic, which counts how many bits are not in their correct place
         # For each face, the center bit determines the target color
         total_wrong = 0
@@ -252,7 +273,7 @@ def manhattanDistanceFromSolved(self):
 
 
 class IDAStarNode:
-    MOVES = ["L", "L'", "R", "R'", "U", "U'", "D", "D'", "F", "F'", "B", "B'"]
+    MOVES = ["L", "LP", "R", "RP", "U", "UP", "D", "DP", "F", "FP", "B", "BP"]
 
     def __init__(self, rubiks, path=None, parent=None):
         self.rubiks = rubiks
