@@ -233,7 +233,7 @@ class Rubiks:
         """Move controller function. Takes a move in string format and applies the corresponding move to the cube.
         Used for any code that wants to apply moves to the cube, such as scrambling or solving logic."""
     
-    def manhattanDistanceFromSolved(self):
+def manhattanDistanceFromSolved(self):
         # Simple heuristic, which counts how many bits are not in their correct place
         # For each face, the center bit determines the target color
         total_wrong = 0
@@ -245,71 +245,9 @@ class Rubiks:
             total_wrong += wrong_count
         # Each move can fix at most 8 bits, so divide by 8 and round up
         return max(0, (total_wrong // 8) + (1 if total_wrong % 8 > 0 else 0))
-    """Heuristic function to estimate the number of moves from the solved state.
+"""Heuristic function to estimate the number of moves from the solved state.
     Counts how many stickers are not in the correct position, 
     and divides by 8 since each move can at most correctly position 8 stickers. Should always be admissible, 
     while still giving a reasonable estimate of distance from the solved state. Used for solving logic."""
 
 
-class IDAStarNode:
-    MOVES = ["L", "L'", "R", "R'", "U", "U'", "D", "D'", "F", "F'", "B", "B'"]
-
-    def __init__(self, rubiks, path=None, parent=None):
-        self.rubiks = rubiks
-        self.path = path if path is not None else []
-        self.parent = parent
-        self.g = len(self.path)
-        self.h = self.rubiks.manhattanDistanceFromSolved()
-        self.f = self.g + self.h
-
-    def isGoal(self):
-        return self.rubiks.isSolved()
-
-    def getPath(self):
-        return self.path
-
-    def getRubiks(self):
-        return self.rubiks
-
-    def nextNodes(self):
-        nodes = []
-        for move in self.MOVES:
-            new_rubiks = self.rubiks.clone()
-            new_rubiks.applyMove(move)
-            new_path = self.path + [move]
-            nodes.append(IDAStarNode(new_rubiks, new_path, self))
-        return nodes
-
-
-class InputMatrices:
-    def __init__(self, input_string):
-        self.colors = input_string.split(',')
-        if len(self.colors) != 54:
-            raise ValueError("Input string must contain exactly 54 colors separated by commas")
-
-    def makeRubiks(self):
-        # Create 6 faces, each 3x3
-        faces = []
-        idx = 0
-        for _ in range(6):
-            face = []
-            for _ in range(3):
-                row = self.colors[idx:idx+3]
-                face.append(row)
-                idx += 3
-            faces.append(face)
-        return Rubiks(faces)
-
-
-def makeRandomRubiks(solved_cube, num_moves):
-    import random
-    cube = solved_cube.clone()
-    moves = IDAStarNode.MOVES
-    for _ in range(num_moves):
-        move = random.choice(moves)
-        cube.applyMove(move)
-    return cube
-
-
-exportedclasses = [Rubiks, IDAStarNode, InputMatrices]
-exportfunctions = [makeRandomRubiks]
