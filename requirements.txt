@@ -1,0 +1,5 @@
+1. Code must use an IDA* based system.
+2. Code must be able to solve a Rubiks Cube.
+3. Successes must be repeatable. 
+4. Code must be able to take in arguments for file locations.
+5. Code Enhancements must be improvements in the long term if used in final version.
