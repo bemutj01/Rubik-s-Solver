@@ -282,15 +282,16 @@ class IDAStarNode:
         self.g = len(self.path)
         self.h = self.rubiks.manhattanDistanceFromSolved()
         self.f = self.g + self.h
-
+    """Initializes values for IDAStar Node."""
     def isGoal(self):
         return self.rubiks.isSolved()
-
+    """Checks if the node has reached the solved state."""
     def getPath(self):
         return self.path
-
+    """Gets Path array."""
     def getRubiks(self):
         return self.rubiks
+    """Gets Rubiks object."""
 
     def nextNodes(self):
         nodes = []
@@ -300,6 +301,7 @@ class IDAStarNode:
             new_path = self.path + [move]
             nodes.append(IDAStarNode(new_rubiks, new_path, self))
         return nodes
+    """gets the set of next nodes that can be created with moves from this point."""
 
 
 class InputMatrices:
@@ -307,6 +309,7 @@ class InputMatrices:
         self.colors = input_string.split(',')
         if len(self.colors) != 54:
             raise ValueError("Input string must contain exactly 54 colors separated by commas")
+    """Initializes values"""
 
     def makeRubiks(self):
         # Create 6 faces, each 3x3
@@ -320,6 +323,7 @@ class InputMatrices:
                 idx += 3
             faces.append(face)
         return Rubiks(faces)
+    """Converts colors to cube."""
 
 
 def makeRandomRubiks(solved_cube, num_moves):

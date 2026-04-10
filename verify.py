@@ -8,23 +8,19 @@ parser.add_argument('solutionfile', type=str, help='Path to the input file conta
 args = parser.parse_args()
 
 def getMovesFromFile(filename):
-    #Should grab moves from between brackets only. 
-    # Has format from simulator output, so should be able to directly read the moves from the solution file.
-    # Can have multiple move lists, hence bracketing. Brackets are after an arbitrary text block.
     moves = []
     with open(filename, 'r') as f:
         for line in f:
             if '[' in line and ']' in line:
                 move_str = line.split('[')[1].split(']')[0]
-                #strip all " and ' characters from the move string, as the simulator output may have them but our applyMove function does not use them.
+                #strip all " and ' characters from the move string.
                 move_str = re.sub(r'[\'"]', '', move_str)
                 move_list = move_str.split(', ')
                 moves.append(move_list)
     return moves
+"""Gets and shreds the move lists from the file filename. Designed to handle the formatting of the output from simulator."""
 
 def getCubesFromFile(filename):
-    # Should grab cubes from the cube file, which has a specific format with faces separated by dashes.
-    # Each cube is separated by a line of dashes, and each face is represented as a 3x3 matrix of colors.
     cubes = []
     with open(filename, 'r') as f:
         current_cube = []
@@ -40,7 +36,7 @@ def getCubesFromFile(filename):
         if current_cube:  # Add the last cube if file doesn't end with dashes
             cubes.append(current_cube)
     return cubes
-
+"""Gets a set of data for cubes, and then appends the cubes to a list."""
             
 def verifySolution():
     cubeList = getCubesFromFile(args.cubeFile)
@@ -56,5 +52,7 @@ def verifySolution():
                 print(f"Solution verified for cube {i} with moves: {moveList}")
             else:
                 print(f"Solution not verified for cube {i}")
+"""Verify solutions for the corresponding cube/List combos. 
+As of current testing, movelists tend to be identical between all three settings, so this is sufficient for current testing."""
 
 verifySolution()
