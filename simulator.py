@@ -3,6 +3,10 @@ import numpy as np
 import time
 import os
 import argparse
+import multiprocessing
+from multiprocessing import Queue, Process, cpu_count, Semaphore
+from queue import Empty
+
 parser = argparse.ArgumentParser(description='Rubik\'s Cube Solver')
 parser.add_argument('file', type=str, help='Path to the input file containing cube configurations')
 parser.add_argument('outFile', type=str, help='Path to the output file for solutions')
@@ -125,50 +129,121 @@ This version of the search can significantly reduce the search time for states t
 as it can quickly retrieve solutions for those states without having to search through the entire tree again."""
 
 def IDAStarWithForks(root):
-    # This is an untested prototype for a version of IDA* that uses process forking 
-    # to explore different branches of the search tree in parallel.
+    # IDA* with process forking, capped at the number of CPU cores
     iteration = 0
+    max_workers = cpu_count() or 1
     while True:
         iteration += 1
         # print(f"Iteration {iteration}: depth_limit = {depth_limit}")
-        result = IDAStarSearchWithForks(root, iteration)
+        result = IDAStarSearchWithForks(root, iteration, max_workers)
         if isinstance(result, IDAStarNode):
             return result
         if result == float('inf'):
             return None  # No solution found
 """IDA* search implementation with process forking.
 This version of IDA* uses process forking to explore 
-different branches of the search tree in parallel."""
-def IDAStarSearchWithForks(node, depth_limit):
-    # this is an untested prototype for a version of the recursive search function 
-    # that uses process forking to explore different branches of the search tree in parallel.
+different branches of the search tree in parallel, with the number of concurrent forks capped at the number of CPU cores."""
+
+
+def fork_search_worker(node, depth_limit, result_queue):
+    result = IDAStarSearchWithForksRecursive(node, depth_limit)
+    result_queue.put(result)
+"""Worker function that runs in a child process to perform the IDA* search."""
+
+
+def IDAStarSearchWithForks(node, depth_limit, max_workers):
     if node.isGoal():
         return node
     if node.f > depth_limit:
         return node.f
+    
+    min_threshold = float('inf')
+    next_nodes = list(node.nextNodes())
+    
+    if not next_nodes:
+        return min_threshold
+    
+    # If we only have a few nodes, use direct recursion
+    if len(next_nodes) <= max_workers:
+        for next_node in next_nodes:
+            result = IDAStarSearchWithForksRecursive(next_node, depth_limit)
+            if isinstance(result, IDAStarNode):
+                return result
+            min_threshold = min(min_threshold, result)
+        return min_threshold
+    
+    # For larger numbers of nodes, batch them using multiple workers
+    result_queue = Queue()
+    active_processes = []
+    node_index = 0
+    
+    while node_index < len(next_nodes) or active_processes:
+        # Start new processes up to max_workers limit
+        while len(active_processes) < max_workers and node_index < len(next_nodes):
+            next_node = next_nodes[node_index]
+            p = Process(target=fork_search_worker, args=(next_node, depth_limit, result_queue))
+            p.start()
+            active_processes.append(p)
+            node_index += 1
+        
+        # Collect results from any finished processes
+        finished_processes = []
+        for i, p in enumerate(active_processes):
+            if not p.is_alive():
+                # Check if this process produced a result
+                try:
+                    result = result_queue.get_nowait()
+                    if isinstance(result, IDAStarNode):
+                        # Solution found, terminate remaining processes
+                        for proc in active_processes:
+                            if proc.is_alive():
+                                proc.terminate()
+                                proc.join(timeout=1)
+                        return result
+                    else:
+                        min_threshold = min(min_threshold, result)
+                except Empty:
+                    pass
+                p.join()
+                finished_processes.append(i)
+        
+        # Remove finished processes from tracking
+        for i in reversed(finished_processes):
+            active_processes.pop(i)
+        
+        # If no processes finished yet, wait a bit to avoid busy waiting
+        if finished_processes or len(active_processes) < max_workers:
+            time.sleep(0.001)
+    
+    return min_threshold
+"""
+Parallel IDA* search function that uses process forking with bounded concurrency.
+Limits the number of concurrent child processes to the number of CPU cores.
+Each child process explores a different branch of the search tree.
+"""
+
+
+def IDAStarSearchWithForksRecursive(node, depth_limit):
+    """
+    Recursive search function for IDA* with forking.
+    This is the actual recursive search that runs in both parent and child processes.
+    """
+    if node.isGoal():
+        return node
+    if node.f > depth_limit:
+        return node.f
+    
     min_threshold = float('inf')
     for next_node in node.nextNodes():
-        pid = os.fork()
-        if pid == 0:  # Child process
-            result = IDAStarSearchWithForks(next_node, depth_limit)
-            if isinstance(result, IDAStarNode):
-                print(f"Found solution in child process {os.getpid()}!")
-                with open(f'solution_{os.getpid()}.txt', 'w') as f:
-                    f.write(f"Solution found in child process {os.getpid()}!\n")
-                    f.write(f"Moves: {result.path}\n")
-            os._exit(0)  # Exit child process after search
-    if pid > 0:  # Parent process
-        os.wait()  # Wait for child processes to finish
-        if os.path.exists(f'solution_{pid}.txt'):
-            with open(f'solution_{pid}.txt', 'r') as f:
-                return f.read()  # Return the solution found by the child process
-            os.remove(f'solution_{pid}.txt')  # Clean up solution file
+        result = IDAStarSearchWithForksRecursive(next_node, depth_limit)
+        if isinstance(result, IDAStarNode):
+            return result
+        min_threshold = min(min_threshold, result)
     return min_threshold
-"""Recursive search function for IDA* with process forking.
-This version of the search function uses process forking to explore different branches of the search tree in
-parallel. Each child process explores a different branch of the search tree, and if a solution is found, 
-it writes the solution to a file. The parent process waits for the child processes to finish 
-and checks for any solution files created by the child processes."""
+"""
+Recursive search function for IDA* with forking.
+This performs the standard recursive IDA* search without additional forking at this level.
+"""
 
 def extractCubesFromFile(filename):
     with open(filename, 'r') as f:
@@ -213,6 +288,16 @@ with open(outFile, 'w') as f:
         f.write(f"Solving cube {i+1}...")
         start_time = time.time()
         solution_node = IDAStar(IDAStarNode(rubiks))
+        end_time = time.time()
+        if solution_node:
+            f.write(f"Solution found for cube {i+1} in {end_time - start_time:.2f} seconds!")
+            f.write(f"Moves: {solution_node.path}\n")
+        else:
+            f.write(f"No solution found for cube {i+1}.\n")
+    for i, rubiks in enumerate(rubiks_list):
+        f.write(f"Solving cube using forking {i+1}...")
+        start_time = time.time()
+        solution_node = IDAStarWithForks(IDAStarNode(rubiks))
         end_time = time.time()
         if solution_node:
             f.write(f"Solution found for cube {i+1} in {end_time - start_time:.2f} seconds!")
