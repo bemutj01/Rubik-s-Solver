@@ -128,14 +128,17 @@ The minimum f value that exceeds the depth limit is tracked.
 This version of the search can significantly reduce the search time for states that have already been encountered during the search process, 
 as it can quickly retrieve solutions for those states without having to search through the entire tree again."""
 
-def IDAStarWithForks(root):
+def IDAStarWithForks(root, mem=False):
     # IDA* with process forking, capped at the number of CPU cores
     iteration = 0
-    max_workers = cpu_count() or 1
+    max_workers = max(cpu_count(), 16)
     while True:
         iteration += 1
         # print(f"Iteration {iteration}: depth_limit = {depth_limit}")
-        result = IDAStarSearchWithForks(root, iteration, max_workers)
+        if mem:
+            result = IDAStarSearchWithForkedMemory(root, iteration, max_workers*4)
+        else:
+            result = IDAStarSearchWithForks(root, iteration, max_workers*4)
         if isinstance(result, IDAStarNode):
             return result
         if result == float('inf'):
@@ -145,8 +148,11 @@ This version of IDA* uses process forking to explore
 different branches of the search tree in parallel, with the number of concurrent forks capped at the number of CPU cores."""
 
 
-def fork_search_worker(node, depth_limit, result_queue):
-    result = IDAStarSearchWithForksRecursive(node, depth_limit)
+def fork_search_worker(node, depth_limit, result_queue, mem = False):
+    if(mem):
+        result = IDAStarSearchWithForksRecursiveMemory(node, depth_limit)
+    else:
+        result = IDAStarSearchWithForksRecursive(node, depth_limit)
     result_queue.put(result)
 """Worker function that runs in a child process to perform the IDA* search."""
 
@@ -245,6 +251,114 @@ Recursive search function for IDA* with forking.
 This performs the standard recursive IDA* search without additional forking at this level.
 """
 
+def IDAStarSearchWithForkedMemory(node, depth_limit, max_workers):
+    if node.isGoal():
+        fromSolutionToMemorization(node)
+        return node
+    memorized_path = get_memorized_solution(node.getRubiks())
+    if memorized_path is not None:
+        if node.g + len(memorized_path) <= depth_limit:
+            solved_rubiks = node.getRubiks().clone()
+            for move in memorized_path:
+                solved_rubiks.applyMove(move)
+            full_path = node.getPath() + memorized_path
+            return IDAStarNode(solved_rubiks, path=full_path)
+    if node.f > depth_limit:
+        return node.f
+    
+    min_threshold = float('inf')
+    next_nodes = list(node.nextNodes())
+    
+    if not next_nodes:
+        return min_threshold
+    
+    # If we only have a few nodes, use direct recursion
+    if len(next_nodes) <= max_workers:
+        for next_node in next_nodes:
+            result = IDAStarSearchWithForksRecursiveMemory(next_node, depth_limit)
+            if isinstance(result, IDAStarNode):
+                return result
+            min_threshold = min(min_threshold, result)
+        return min_threshold
+    
+    # For larger numbers of nodes, batch them using multiple workers
+    result_queue = Queue()
+    active_processes = []
+    node_index = 0
+    
+    while node_index < len(next_nodes) or active_processes:
+        # Start new processes up to max_workers limit
+        while len(active_processes) < max_workers and node_index < len(next_nodes):
+            next_node = next_nodes[node_index]
+            p = Process(target=fork_search_worker, args=(next_node, depth_limit, result_queue, True))
+            p.start()
+            active_processes.append(p)
+            node_index += 1
+        
+        # Collect results from any finished processes
+        finished_processes = []
+        for i, p in enumerate(active_processes):
+            if not p.is_alive():
+                # Check if this process produced a result
+                try:
+                    result = result_queue.get_nowait()
+                    if isinstance(result, IDAStarNode):
+                        # Solution found, terminate remaining processes
+                        for proc in active_processes:
+                            if proc.is_alive():
+                                proc.terminate()
+                                proc.join(timeout=1)
+                        return result
+                    else:
+                        min_threshold = min(min_threshold, result)
+                except Empty:
+                    pass
+                p.join()
+                finished_processes.append(i)
+        
+        # Remove finished processes from tracking
+        for i in reversed(finished_processes):
+            active_processes.pop(i)
+        
+        # If no processes finished yet, wait a bit to avoid busy waiting
+        if finished_processes or len(active_processes) < max_workers:
+            time.sleep(0.001)
+    
+    return min_threshold
+
+
+
+def IDAStarSearchWithForksRecursiveMemory(node, depth_limit):
+    """
+    Recursive search function for IDA* with forking.
+    This is the actual recursive search that runs in both parent and child processes.
+    """
+    if node.isGoal():
+        fromSolutionToMemorization(node)
+        return node
+    memorized_path = get_memorized_solution(node.getRubiks())
+    if memorized_path is not None:
+        if node.g + len(memorized_path) <= depth_limit:
+            solved_rubiks = node.getRubiks().clone()
+            for move in memorized_path:
+                solved_rubiks.applyMove(move)
+            full_path = node.getPath() + memorized_path
+            return IDAStarNode(solved_rubiks, path=full_path)
+    if node.f > depth_limit:
+        return node.f
+    
+    min_threshold = float('inf')
+    for next_node in node.nextNodes():
+        result = IDAStarSearchWithForksRecursiveMemory(next_node, depth_limit)
+        if isinstance(result, IDAStarNode):
+            return result
+        min_threshold = min(min_threshold, result)
+    return min_threshold
+"""
+Recursive search function for IDA* with forking.
+This performs the standard recursive IDA* search without additional forking at this level.
+"""
+
 def extractCubesFromFile(filename):
     with open(filename, 'r') as f:
         cubes = []
@@ -319,6 +433,28 @@ with open(outFile, 'w') as f:
         f.write(f"Solving cube {i+1} again with memorization...")
         start_time = time.time()
         solution_node = successMemorizingIDAStar(IDAStarNode(rubiks))
+        end_time = time.time()
+        if solution_node:
+            f.write(f"Solution found for cube {i+1} in {end_time - start_time:.2f} seconds!")
+            f.write(f"Moves: {solution_node.path}\n"    )
+        else:
+            f.write(f"No solution found for cube {i+1}.\n")
+    memorized_solutions = []
+    for i, rubiks in enumerate(rubiks_list):
+        f.write(f"Solving cube {i+1} with memorization and Forks...")
+        start_time = time.time()
+        solution_node = IDAStarWithForks(IDAStarNode(rubiks), True)
+        end_time = time.time()
+        if solution_node:
+            f.write(f"Solution found for cube {i+1} in {end_time - start_time:.2f} seconds!")
+            f.write(f"Moves: {solution_node.path}\n"    )
+        else:
+            f.write(f"No solution found for cube {i+1}.\n")
+
+    for i, rubiks in enumerate(rubiks_list):
+        f.write(f"Solving cube {i+1} again with memorization and Forks...")
+        start_time = time.time()
+        solution_node = IDAStarWithForks(IDAStarNode(rubiks), True)
         end_time = time.time()
         if solution_node:
             f.write(f"Solution found for cube {i+1} in {end_time - start_time:.2f} seconds!")
