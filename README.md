@@ -1,18 +1,23 @@
 # Rubik-s-Solver
 IDA* based Rubik's Cube Solver, designed for 3x3 cube.
-This code is relatively simple to run. Each code has a 2 argument execution. 
+
+Before running this code, please run 
+pip install numpy
+in the terminal.
+
+This code is relatively simple to run. Each code has a 2-3 argument execution. 
 
 If you wish to make a randomized cube for testing, use:
 
-python cubeMaker.py {fileName} {moveCount}
+python cubeMaker.py {fileName} {moveCount} {cubeCount}
 
-which will send a preset (currently 5) number of cubes of that movecount to your indicated file.
+which will send a number of cubes (default 5) of that movecount to your indicated file.
 
 If you wish to find a path to solve the randomized file, use:
 
 python simulator.py {inputFile} {outputFile}
 
-Which will take the cube, use 3 different methods (for the sake of speed testing) and write readable outputs to an output file. P had to be substituted for ' in standard Rubiks notation, but otherwise the text should make sense.
+Which will take the cube, use 4 different methods (for the sake of speed testing) and write readable outputs to an output file. P had to be substituted for ' in standard Rubiks notation, but otherwise the text should make sense.
 If you wish to verify the code operated properly, use:
 
 python verify.py {cubeFile} {moveFile}
