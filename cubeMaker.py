@@ -26,5 +26,5 @@ fullSquare = ",".join([color for color in colors for _ in range(9)])
 inputMatrices = InputMatrices(fullSquare)
 rubiksToFile = [makeRandomRubiks(inputMatrices.makeRubiks(), num_moves=args.moveCount) for _ in range(args.cubeCount)]
 sendRubiksToFile(rubiksToFile, args.file)
-"""Generation logic. Currently makes 5, may make version with for instead of manual loop once larger scale compute is available for solving.
+"""Generation logic. Currently default to 5, has selectable manual loop for larger scale compute testing.
 Cubes are given a number of random moves such that one can easily generate cubes for testing."""
