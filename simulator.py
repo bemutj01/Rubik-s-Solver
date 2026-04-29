@@ -398,6 +398,7 @@ rubiks_list = cubesToRubiks(test_cubes)
 #    print(f"State: {state}, Path: {path}")
 with open(outFile, 'w') as f:
     f.write("Results for IDA*:\n")
+    totalSolve = [0,0,0,0,0,0]
     for i, rubiks in enumerate(rubiks_list):
         f.write(f"Solving cube {i+1}...")
         start_time = time.time()
@@ -408,6 +409,8 @@ with open(outFile, 'w') as f:
             f.write(f"Moves: {solution_node.path}\n")
         else:
             f.write(f"No solution found for cube {i+1}.\n")
+        totalSolve[0] += end_time - start_time
+
     for i, rubiks in enumerate(rubiks_list):
         f.write(f"Solving cube using forking {i+1}...")
         start_time = time.time()
@@ -418,6 +421,7 @@ with open(outFile, 'w') as f:
             f.write(f"Moves: {solution_node.path}\n")
         else:
             f.write(f"No solution found for cube {i+1}.\n")
+        totalSolve[1] += end_time - start_time
     for i, rubiks in enumerate(rubiks_list):
         f.write(f"Solving cube {i+1} with memorization...")
         start_time = time.time()
@@ -428,6 +432,7 @@ with open(outFile, 'w') as f:
             f.write(f"Moves: {solution_node.path}\n"    )
         else:
             f.write(f"No solution found for cube {i+1}.\n")
+        totalSolve[2] += end_time - start_time
 
     for i, rubiks in enumerate(rubiks_list):
         f.write(f"Solving cube {i+1} again with memorization...")
@@ -439,6 +444,7 @@ with open(outFile, 'w') as f:
             f.write(f"Moves: {solution_node.path}\n"    )
         else:
             f.write(f"No solution found for cube {i+1}.\n")
+        totalSolve[3] += end_time - start_time
     memorized_solutions = []
     for i, rubiks in enumerate(rubiks_list):
         f.write(f"Solving cube {i+1} with memorization and Forks...")
@@ -450,6 +456,7 @@ with open(outFile, 'w') as f:
             f.write(f"Moves: {solution_node.path}\n"    )
         else:
             f.write(f"No solution found for cube {i+1}.\n")
+        totalSolve[4] += end_time - start_time
 
     for i, rubiks in enumerate(rubiks_list):
         f.write(f"Solving cube {i+1} again with memorization and Forks...")
@@ -461,6 +468,14 @@ with open(outFile, 'w') as f:
             f.write(f"Moves: {solution_node.path}\n"    )
         else:
             f.write(f"No solution found for cube {i+1}.\n")
+        totalSolve[5] += end_time - start_time
+    f.write(f"Total runtime for base IDA: {totalSolve[0]}\n")
+    f.write(f"Total runtime for Forked IDA: {totalSolve[1]}\n")
+    f.write(f"Total runtime for base Memory IDA: {totalSolve[2]}\n")
+    f.write(f"Total runtime for Memory IDA with pre-found solutions: {totalSolve[3]}\n")
+    f.write(f"Total runtime for Forked Memory IDA: {totalSolve[4]}\n")
+    f.write(f"Total runtime for Forked Memory IDA with pre-found solutions: {totalSolve[5]}\n")
+    
 """This block of code reads the cube configurations from the input file, converts them into Rubiks cube objects, 
 and then applies both the standard IDA* search and the memorization-enhanced IDA* search to solve each cube for testing purposes.
 The results, including the time taken and the moves to solve each cube, are written to the specified output file.
