@@ -1,0 +1,37 @@
+Results for IDA*:
+Solving cube 1...Solution found for cube 1 in 0.06 seconds!Moves: ['LP', 'FP', 'L', 'RP', 'F']
+Solving cube 2...Solution found for cube 2 in 0.01 seconds!Moves: ['B', 'UP', 'FP']
+Solving cube 3...Solution found for cube 3 in 5.84 seconds!Moves: ['FP', 'RP', 'UP', 'FP', 'U', 'F', 'DP']
+Solving cube 4...Solution found for cube 4 in 0.01 seconds!Moves: ['BP', 'L', 'DP']
+Solving cube 5...Solution found for cube 5 in 0.03 seconds!Moves: ['D', 'F', 'D', 'BP', 'RP']
+Solving cube using forking 1...Solution found for cube 1 in 0.05 seconds!Moves: ['LP', 'FP', 'L', 'RP', 'F']
+Solving cube using forking 2...Solution found for cube 2 in 0.00 seconds!Moves: ['B', 'UP', 'FP']
+Solving cube using forking 3...Solution found for cube 3 in 5.71 seconds!Moves: ['FP', 'RP', 'UP', 'FP', 'U', 'F', 'DP']
+Solving cube using forking 4...Solution found for cube 4 in 0.01 seconds!Moves: ['BP', 'L', 'DP']
+Solving cube using forking 5...Solution found for cube 5 in 0.02 seconds!Moves: ['D', 'F', 'D', 'BP', 'RP']
+Solving cube 1 with memorization...Solution found for cube 1 in 0.05 seconds!Moves: ['LP', 'FP', 'L', 'RP', 'F']
+Solving cube 2 with memorization...Solution found for cube 2 in 0.00 seconds!Moves: ['B', 'UP', 'FP']
+Solving cube 3 with memorization...Solution found for cube 3 in 7.30 seconds!Moves: ['FP', 'RP', 'UP', 'FP', 'U', 'F', 'DP']
+Solving cube 4 with memorization...Solution found for cube 4 in 0.00 seconds!Moves: ['BP', 'L', 'DP']
+Solving cube 5 with memorization...Solution found for cube 5 in 0.02 seconds!Moves: ['D', 'F', 'D', 'BP', 'RP']
+Solving cube 1 again with memorization...Solution found for cube 1 in 0.01 seconds!Moves: ['LP', 'FP', 'L', 'RP', 'F']
+Solving cube 2 again with memorization...Solution found for cube 2 in 0.00 seconds!Moves: ['B', 'UP', 'FP']
+Solving cube 3 again with memorization...Solution found for cube 3 in 0.11 seconds!Moves: ['FP', 'RP', 'UP', 'FP', 'U', 'F', 'DP']
+Solving cube 4 again with memorization...Solution found for cube 4 in 0.00 seconds!Moves: ['BP', 'L', 'DP']
+Solving cube 5 again with memorization...Solution found for cube 5 in 0.00 seconds!Moves: ['D', 'F', 'D', 'BP', 'RP']
+Solving cube 1 with memorization and Forks...Solution found for cube 1 in 0.05 seconds!Moves: ['LP', 'FP', 'L', 'RP', 'F']
+Solving cube 2 with memorization and Forks...Solution found for cube 2 in 0.00 seconds!Moves: ['B', 'UP', 'FP']
+Solving cube 3 with memorization and Forks...Solution found for cube 3 in 7.31 seconds!Moves: ['FP', 'RP', 'UP', 'FP', 'U', 'F', 'DP']
+Solving cube 4 with memorization and Forks...Solution found for cube 4 in 0.00 seconds!Moves: ['BP', 'L', 'DP']
+Solving cube 5 with memorization and Forks...Solution found for cube 5 in 0.02 seconds!Moves: ['D', 'F', 'D', 'BP', 'RP']
+Solving cube 1 again with memorization and Forks...Solution found for cube 1 in 0.01 seconds!Moves: ['LP', 'FP', 'L', 'RP', 'F']
+Solving cube 2 again with memorization and Forks...Solution found for cube 2 in 0.00 seconds!Moves: ['B', 'UP', 'FP']
+Solving cube 3 again with memorization and Forks...Solution found for cube 3 in 0.11 seconds!Moves: ['FP', 'RP', 'UP', 'FP', 'U', 'F', 'DP']
+Solving cube 4 again with memorization and Forks...Solution found for cube 4 in 0.00 seconds!Moves: ['BP', 'L', 'DP']
+Solving cube 5 again with memorization and Forks...Solution found for cube 5 in 0.00 seconds!Moves: ['D', 'F', 'D', 'BP', 'RP']
+Total runtime for base IDA: 5.936302423477173
+Total runtime for Forked IDA: 5.794877767562866
+Total runtime for base Memory IDA: 7.380204916000366
+Total runtime for Memory IDA with pre-found solutions: 0.1243581771850586
+Total runtime for Forked Memory IDA: 7.387251615524292
+Total runtime for Forked Memory IDA with pre-found solutions: 0.1247105598449707
