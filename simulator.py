@@ -325,7 +325,7 @@ def IDAStarSearchWithForkedMemory(node, depth_limit, max_workers):
             time.sleep(0.001)
     
     return min_threshold
-
+"""Forked search function but with added memory checking system."""
 
 
 def IDAStarSearchWithForksRecursiveMemory(node, depth_limit):
