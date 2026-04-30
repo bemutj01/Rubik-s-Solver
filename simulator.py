@@ -128,7 +128,6 @@ The minimum f value that exceeds the depth limit is tracked.
 This version of the search can significantly reduce the search time for states that have already been encountered during the search process, 
 as it can quickly retrieve solutions for those states without having to search through the entire tree again."""
 
-<<<<<<< HEAD
 def IDAStarWithForks(root, mem=False):
     # IDA* with process forking, capped at the number of CPU cores
     iteration = 0
@@ -140,16 +139,6 @@ def IDAStarWithForks(root, mem=False):
             result = IDAStarSearchWithForkedMemory(root, iteration, max_workers*4)
         else:
             result = IDAStarSearchWithForks(root, iteration, max_workers*4)
-=======
-def IDAStarWithForks(root, mem= False):
-    # IDA* with process forking, capped at the number of CPU cores
-    iteration = 0
-    max_workers = 16
-    while True:
-        iteration += 1
-        # print(f"Iteration {iteration}: depth_limit = {depth_limit}")
-        result = IDAStarSearchWithForks(root, iteration, max_workers*4)
->>>>>>> cb32493 (Needs work on combined version)
         if isinstance(result, IDAStarNode):
             return result
         if result == float('inf'):
@@ -286,11 +275,7 @@ def IDAStarSearchWithForkedMemory(node, depth_limit, max_workers):
     # If we only have a few nodes, use direct recursion
     if len(next_nodes) <= max_workers:
         for next_node in next_nodes:
-<<<<<<< HEAD
             result = IDAStarSearchWithForksRecursiveMemory(next_node, depth_limit)
-=======
-            result = IDAStarSearchWithForksRecursive(next_node, depth_limit)
->>>>>>> cb32493 (Needs work on combined version)
             if isinstance(result, IDAStarNode):
                 return result
             min_threshold = min(min_threshold, result)
@@ -364,11 +349,7 @@ def IDAStarSearchWithForksRecursiveMemory(node, depth_limit):
     
     min_threshold = float('inf')
     for next_node in node.nextNodes():
-<<<<<<< HEAD
         result = IDAStarSearchWithForksRecursiveMemory(next_node, depth_limit)
-=======
-        result = IDAStarSearchWithForksRecursive(next_node, depth_limit)
->>>>>>> cb32493 (Needs work on combined version)
         if isinstance(result, IDAStarNode):
             return result
         min_threshold = min(min_threshold, result)
