@@ -9,7 +9,7 @@ This code is relatively simple to run. Each code has a 2-3 argument execution.
 
 If you wish to make a randomized cube for testing, use:
 
-python cubeMaker.py {fileName} {moveCount} {cubeCount}
+python cubeMaker.py {fileName} (optional: --moveCount {moveCount} --cubeCount {cubeCount})
 
 which will send a number of cubes (default 5) of that movecount to your indicated file.
 
